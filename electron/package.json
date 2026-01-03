@@ -1,0 +1,41 @@
+{
+  "name": "vr-system-monitor",
+  "version": "1.0.0",
+  "description": "Real-time metrics dashboard for PC and Meta Quest 3",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run backend\" \"npm run electron\"",
+    "backend": "cd ../backend && python app.py",
+    "electron": "wait-on http://localhost:5000/health && electron .",
+    "build": "electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.antigravity.vr-monitor",
+    "productName": "VR System Monitor",
+    "directories": {
+      "output": "../dist"
+    },
+    "files": [
+      "main.js",
+      "../frontend/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  }
+}

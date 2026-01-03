@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="VR System Monitor - Real-time metrics dashboard for PC and Meta Quest 3"
+    />
+    <title>System Monitor</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- styles -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- loading -->
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <span class="loading-text">CONNECTING TO BACKEND...</span>
+      </div>
+    </div>
+    
+    <!-- connection banner -->
+    <div id="connectionBanner" class="connection-banner hidden">
+      <span class="banner-icon">⚠</span>
+      <span class="banner-text">Backend disconnected. Reconnecting...</span>
+      <div class="banner-spinner"></div>
+    </div>
+    
+    <div id="app">
+      <!-- top bar -->
+      <header id="topBar">
+        <div class="top-bar-left">
+          <!-- title -->
+          <div class="app-title">
+            <span class="app-icon"></span>
+            <span class="title-text">SYSTEM MONITOR</span>
+          </div>
+
+          <!-- status -->
+          <div class="device-status-area">
+            <div class="device-status" id="pcStatus">
+              <span class="status-indicator connected"></span>
+              <span class="status-text">PC Connected</span>
+            </div>
+            <div class="status-separator"></div>
+            <div class="device-status" id="questStatus">
+              <span class="status-indicator disconnected"></span>
+              <span class="status-text">Quest 3 Disconnected</span>
+              <!-- badges -->
+              <div class="connection-badges" id="connectionBadges">
+                <span class="conn-badge" id="connUsb" title="USB Connection">[USB]</span>
+                <span class="conn-badge" id="connWifi" title="Wireless Connection">[WIRELESS]</span>
+              </div>
+            </div>
+          </div>
+
+          <span class="decorative-label top-left">[STATUS]</span>
+        </div>
+
+        <div class="top-bar-middle"></div>
+
+        <div class="top-bar-right">
+          <!-- recording -->
+          <div class="recording-control">
+            <span class="recording-timer" id="recordingTimer">00:00:00</span>
+            <button class="record-button" id="recordButton">
+              <span class="record-dot">●</span>
+              <span class="record-text">RECORD</span>
+            </button>
+          </div>
+          <span class="decorative-label top-right">[RECORD]</span>
+          
+          <!-- settings -->
+          <div class="settings-dropdown" id="settingsDropdown">
+            <button class="settings-trigger" id="settingsTrigger">[SETTINGS]</button>
+            <div class="settings-menu hidden" id="settingsMenu">
+              <div class="settings-section">
+                <div class="settings-label">CONNECTION PRIORITY</div>
+                <div class="settings-options">
+                  <label class="settings-option">
+                    <input type="radio" name="connPriority" value="usb_first" checked>
+                    <span>USB First</span>
+                  </label>
+                  <label class="settings-option">
+                    <input type="radio" name="connPriority" value="wireless_first">
+                    <span>Wireless First</span>
+                  </label>
+                  <label class="settings-option">
+                    <input type="radio" name="connPriority" value="auto">
+                    <span>Auto</span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-divider"></div>
+              <div class="settings-section">
+                <div class="settings-label">WIRELESS IP</div>
+                <div class="settings-row">
+                  <input type="text" class="settings-input" id="wirelessIpInput" placeholder="192.168.x.x">
+                  <button class="settings-btn" id="discoverBtn">DISCOVER</button>
+                </div>
+              </div>
+              <div class="settings-divider"></div>
+              <div class="settings-section">
+                <div class="settings-label">AUTO-CONNECTION</div>
+                <div class="settings-checkboxes">
+                  <label class="settings-checkbox">
+                    <input type="checkbox" id="autoEnableWireless" checked>
+                    <span>Auto-enable wireless on USB</span>
+                  </label>
+                  <label class="settings-checkbox">
+                    <input type="checkbox" id="autoFallback" checked>
+                    <span>Auto-fallback if connection drops</span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-divider"></div>
+              <div class="settings-section">
+                <div class="settings-label">DIAGNOSTICS</div>
+                <div class="settings-diagnostics" id="connectionDiagnostics">
+                  <div class="diag-row">
+                    <span class="diag-label">USB:</span>
+                    <span class="diag-value" id="diagUsb">--</span>
+                  </div>
+                  <div class="diag-row">
+                    <span class="diag-label">Wireless:</span>
+                    <span class="diag-value" id="diagWireless">--</span>
+                  </div>
+                  <div class="diag-row">
+                    <span class="diag-label">Latency:</span>
+                    <span class="diag-value" id="diagLatency">--</span>
+                  </div>
+                  <div class="diag-row">
+                    <span class="diag-label">Quality:</span>
+                    <span class="diag-value" id="diagQuality">--</span>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-divider"></div>
+              <div class="settings-section">
+                <div class="settings-label">POLL INTERVAL</div>
+                <div class="settings-options">
+                  <label class="settings-option">
+                    <input type="radio" name="pollInterval" value="5">
+                    <span>5s</span>
+                  </label>
+                  <label class="settings-option">
+                    <input type="radio" name="pollInterval" value="10" checked>
+                    <span>10s</span>
+                  </label>
+                  <label class="settings-option">
+                    <input type="radio" name="pollInterval" value="30">
+                    <span>30s</span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-divider"></div>
+              <div class="settings-section">
+                <div class="settings-label">LAYOUT</div>
+                <div class="settings-options">
+                  <label class="settings-option">
+                    <input type="radio" name="layoutMode" value="side-by-side" checked>
+                    <span>Side by Side</span>
+                  </label>
+                  <label class="settings-option">
+                    <input type="radio" name="layoutMode" value="stacked">
+                    <span>Stacked</span>
+                  </label>
+                  <label class="settings-option">
+                    <input type="radio" name="layoutMode" value="quest-only">
+                    <span>Quest Only</span>
+                  </label>
+                  <label class="settings-option">
+                    <input type="radio" name="layoutMode" value="pc-only">
+                    <span>PC Only</span>
+                  </label>
+                </div>
+              </div>
+              <div class="settings-divider"></div>
+              <div class="settings-section">
+                <div class="settings-label">DISPLAY</div>
+                <div class="settings-checkboxes">
+                  <label class="settings-checkbox">
+                    <input type="checkbox" id="compactMode">
+                    <span>Compact mode</span>
+                  </label>
+                  <label class="settings-checkbox">
+                    <input type="checkbox" id="autoCollapseDisconnected" checked>
+                    <span>Auto-collapse disconnected</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="top-bar-decoration"></div>
+      </header>
+
+      <!-- main content -->
+      <main id="content">
+        <!-- pc card -->
+        <div class="card" id="pcCard">
+          <div class="card-corner top-left"></div>
+          <div class="card-corner top-right"></div>
+          <div class="card-pattern"></div>
+
+          <div class="card-header">
+            <div class="device-name">
+              <span class="device-icon square"></span>
+              <span>SYSTEM</span>
+            </div>
+            <span class="decorative-label">[METRICS]</span>
+          </div>
+
+          <div class="card-content">
+            <!-- cpu -->
+            <div class="metric-row" id="pc-cpu-row">
+              <div class="metric-left">
+                <div class="gauge-container" id="pc-cpu-gauge">
+                  <svg class="gauge" viewBox="0 0 200 200">
+                    <circle class="gauge-bg" cx="100" cy="100" r="80" />
+                    <circle
+                      class="gauge-progress"
+                      cx="100"
+                      cy="100"
+                      r="80"
+                      data-value="0"
+                    />
+                    <circle class="gauge-inner" cx="100" cy="100" r="56" />
+                  </svg>
+                  <div class="gauge-value">
+                    <span class="value-number" id="pc-cpu-value">--</span>
+                    <span class="value-unit">%</span>
+                  </div>
+                </div>
+                <div class="metric-label">
+                  <span class="label-primary">CPU USAGE</span>
+                  <span class="label-secondary">real-time</span>
+                </div>
+              </div>
+              <div class="metric-right">
+                <button class="graph-toggle" data-device="pc" data-metric="cpu">
+                  <span class="toggle-icon">≡</span>
+                </button>
+                <span class="status-marker normal">─</span>
+              </div>
+            </div>
+            <div class="graph-container hidden" id="pc-cpu-graph">
+              <span class="decorative-label graph-label">[GRAPH]</span>
+              <canvas id="pc-cpu-chart"></canvas>
+            </div>
+
+            <!-- ram -->
+            <div class="metric-row" id="pc-ram-row">
+              <div class="metric-left">
+                <div class="gauge-container" id="pc-ram-gauge">
+                  <svg class="gauge" viewBox="0 0 200 200">
+                    <circle class="gauge-bg" cx="100" cy="100" r="80" />
+                    <circle
+                      class="gauge-progress"
+                      cx="100"
+                      cy="100"
+                      r="80"
+                      data-value="0"
+                    />
+                    <circle class="gauge-inner" cx="100" cy="100" r="56" />
+                  </svg>
+                  <div class="gauge-value">
+                    <span class="value-number" id="pc-ram-value">--</span>
+                    <span class="value-unit">%</span>
+                  </div>
+                </div>
+                <div class="metric-label">
+                  <span class="label-primary">RAM USAGE</span>
+                  <span class="label-secondary" id="pc-ram-detail">-- / -- GB</span>
+                </div>
+              </div>
+              <div class="metric-right">
+                <button class="graph-toggle" data-device="pc" data-metric="ram">
+                  <span class="toggle-icon">≡</span>
+                </button>
+                <span class="status-marker normal">─</span>
+              </div>
+            </div>
+            <div class="graph-container hidden" id="pc-ram-graph">
+              <span class="decorative-label graph-label">[GRAPH]</span>
+              <canvas id="pc-ram-chart"></canvas>
+            </div>
+
+            <!-- disks header -->
+            <div class="section-header">
+              <span class="section-title">STORAGE</span>
+              <button class="disk-select-button" id="diskSelectButton" title="Select disks">
+                <span>⚙</span>
+              </button>
+            </div>
+            
+            <!-- disk rows -->
+            <div id="diskRowsContainer">
+            </div>
+
+            <!-- network header -->
+            <div class="section-header">
+              <span class="section-title">NETWORK</span>
+            </div>
+            <div class="network-stats" id="pcNetworkStats">
+              <div class="network-row">
+                <span class="network-label">↓ Download</span>
+                <span class="network-value" id="pc-net-download">-- MB/s</span>
+              </div>
+              <div class="network-row">
+                <span class="network-label">↑ Upload</span>
+                <span class="network-value" id="pc-net-upload">-- MB/s</span>
+              </div>
+              <div class="network-row avg">
+                <span class="network-label">5min avg</span>
+                <span class="network-value" id="pc-net-avg">-- MB/s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- quest card -->
+        <div class="card" id="questCard">
+          <div class="card-corner top-left"></div>
+          <div class="card-corner top-right"></div>
+          <div class="card-pattern"></div>
+
+          <div class="card-header">
+            <div class="device-name">
+              <span class="device-icon diamond"></span>
+              <span>META QUEST 3</span>
+            </div>
+            <span class="decorative-label">[LIVE]</span>
+          </div>
+
+          <!-- Connected State -->
+          <div class="card-content" id="questConnected">
+            <!-- CPU Row -->
+            <div class="metric-row" id="quest-3-cpu-row">
+              <div class="metric-left">
+                <div class="gauge-container" id="quest-3-cpu-gauge">
+                  <svg class="gauge" viewBox="0 0 200 200">
+                    <circle class="gauge-bg" cx="100" cy="100" r="80" />
+                    <circle
+                      class="gauge-progress"
+                      cx="100"
+                      cy="100"
+                      r="80"
+                      data-value="0"
+                    />
+                    <circle class="gauge-inner" cx="100" cy="100" r="56" />
+                  </svg>
+                  <div class="gauge-value">
+                    <span class="value-number" id="quest-3-cpu-value">--</span>
+                    <span class="value-unit">%</span>
+                  </div>
+                </div>
+                <div class="metric-label">
+                  <span class="label-primary">CPU USAGE</span>
+                  <span class="label-secondary">real-time</span>
+                </div>
+              </div>
+              <div class="metric-right">
+                <button
+                  class="graph-toggle"
+                  data-device="quest_3"
+                  data-metric="cpu"
+                >
+                  <span class="toggle-icon">≡</span>
+                </button>
+                <span class="status-marker normal">─</span>
+              </div>
+            </div>
+            <div class="graph-container hidden" id="quest-3-cpu-graph">
+              <span class="decorative-label graph-label">[GRAPH]</span>
+              <canvas id="quest-3-cpu-chart"></canvas>
+            </div>
+
+            <!-- RAM Row -->
+            <div class="metric-row" id="quest-3-ram-row">
+              <div class="metric-left">
+                <div class="gauge-container" id="quest-3-ram-gauge">
+                  <svg class="gauge" viewBox="0 0 200 200">
+                    <circle class="gauge-bg" cx="100" cy="100" r="80" />
+                    <circle
+                      class="gauge-progress"
+                      cx="100"
+                      cy="100"
+                      r="80"
+                      data-value="0"
+                    />
+                    <circle class="gauge-inner" cx="100" cy="100" r="56" />
+                  </svg>
+                  <div class="gauge-value">
+                    <span class="value-number" id="quest-3-ram-value">--</span>
+                    <span class="value-unit">%</span>
+                  </div>
+                </div>
+                <div class="metric-label">
+                  <span class="label-primary">RAM USAGE</span>
+                  <span class="label-secondary" id="quest-3-ram-detail">-- / -- GB</span>
+                </div>
+              </div>
+              <div class="metric-right">
+                <button
+                  class="graph-toggle"
+                  data-device="quest_3"
+                  data-metric="ram"
+                >
+                  <span class="toggle-icon">≡</span>
+                </button>
+                <span class="status-marker normal">─</span>
+              </div>
+            </div>
+            <div class="graph-container hidden" id="quest-3-ram-graph">
+              <span class="decorative-label graph-label">[GRAPH]</span>
+              <canvas id="quest-3-ram-chart"></canvas>
+            </div>
+
+            <!-- temp -->
+            <div class="metric-row" id="quest-3-temp-row">
+              <div class="metric-left">
+                <div class="gauge-container" id="quest-3-temp-gauge">
+                  <svg class="gauge" viewBox="0 0 200 200">
+                    <circle class="gauge-bg" cx="100" cy="100" r="80" />
+                    <circle
+                      class="gauge-progress"
+                      cx="100"
+                      cy="100"
+                      r="80"
+                      data-value="0"
+                    />
+                    <circle class="gauge-inner" cx="100" cy="100" r="56" />
+                  </svg>
+                  <div class="gauge-value">
+                    <span class="value-number" id="quest-3-temp-value">--</span>
+                    <span class="value-unit">°C</span>
+                  </div>
+                </div>
+                <div class="metric-label">
+                  <span class="label-primary">DEVICE TEMP</span>
+                  <span class="label-secondary">thermal</span>
+                </div>
+              </div>
+              <div class="metric-right">
+                <button
+                  class="graph-toggle"
+                  data-device="quest_3"
+                  data-metric="temp"
+                >
+                  <span class="toggle-icon">≡</span>
+                </button>
+                <span class="status-marker normal">─</span>
+              </div>
+            </div>
+            <div class="graph-container hidden" id="quest-3-temp-graph">
+              <span class="decorative-label graph-label">[GRAPH]</span>
+              <canvas id="quest-3-temp-chart"></canvas>
+            </div>
+
+            <!-- battery -->
+            <div class="metric-row" id="quest-3-battery-row">
+              <div class="metric-left">
+                <div class="gauge-container" id="quest-3-battery-gauge">
+                  <svg class="gauge" viewBox="0 0 200 200">
+                    <circle class="gauge-bg" cx="100" cy="100" r="80" />
+                    <circle
+                      class="gauge-progress"
+                      cx="100"
+                      cy="100"
+                      r="80"
+                      data-value="0"
+                    />
+                    <circle class="gauge-inner" cx="100" cy="100" r="56" />
+                  </svg>
+                  <div class="gauge-value">
+                    <span class="value-number" id="quest-3-battery-value"
+                      >--</span
+                    >
+                    <span class="value-unit">%</span>
+                  </div>
+                </div>
+                <div class="metric-label">
+                  <span class="label-primary">BATTERY</span>
+                  <span class="label-secondary" id="quest-3-battery-status">remaining</span>
+                </div>
+                <div class="battery-info" id="quest-3-battery-info">
+                  <span class="battery-rate" id="quest-3-battery-rate">—</span>
+                  <span class="battery-eta" id="quest-3-battery-eta">—</span>
+                </div>
+              </div>
+              <div class="metric-right">
+                <button
+                  class="graph-toggle"
+                  data-device="quest_3"
+                  data-metric="battery"
+                >
+                  <span class="toggle-icon">≡</span>
+                </button>
+                <span class="status-marker normal">─</span>
+              </div>
+            </div>
+            <div class="graph-container hidden" id="quest-3-battery-graph">
+              <span class="decorative-label graph-label">[GRAPH]</span>
+              <canvas id="quest-3-battery-chart"></canvas>
+            </div>
+
+            <!-- Network Stats Section -->
+            <div class="section-header">
+              <span class="section-title">NETWORK</span>
+            </div>
+            <div class="network-stats" id="questNetworkStats">
+              <div class="network-row">
+                <span class="network-label">↓ Download</span>
+                <span class="network-value" id="quest-net-download">-- MB/s</span>
+              </div>
+              <div class="network-row">
+                <span class="network-label">↑ Upload</span>
+                <span class="network-value" id="quest-net-upload">-- MB/s</span>
+              </div>
+              <div class="network-row avg">
+                <span class="network-label">5min avg</span>
+                <span class="network-value" id="quest-net-avg">-- MB/s</span>
+              </div>
+            </div>
+
+            <!-- storage header -->
+            <div class="section-header">
+              <span class="section-title">STORAGE</span>
+            </div>
+            <div class="storage-stats" id="questStorageStats">
+              <div class="storage-info">
+                <span class="storage-label">Internal Shared</span>
+                <span class="storage-value" id="quest-storage-text">-- / -- GB</span>
+              </div>
+              <div class="storage-bar-container">
+                <div class="storage-bar" id="quest-storage-bar" style="width: 0%"></div>
+              </div>
+              <div class="storage-details">
+                <span class="detail-item" id="quest-storage-free">-- GB free</span>
+                <span class="detail-item" id="quest-storage-percent">--% used</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- disconnected -->
+          <div
+            class="card-content disconnected-content hidden"
+            id="questDisconnected"
+          >
+            <div class="disconnected-message">
+              <span class="disconnected-title">QUEST 3 DISCONNECTED</span>
+              <span class="disconnected-subtitle"
+                >waiting for usb connection...</span
+              >
+              <span class="disconnected-dots">
+                <span class="dot">.</span>
+                <span class="dot">.</span>
+                <span class="dot">.</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- disk modal -->
+      <div class="modal hidden" id="diskModal">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+          <div class="modal-header">
+            <span class="modal-title">SELECT DISKS</span>
+            <button class="modal-close" id="diskModalClose">×</button>
+          </div>
+          <div class="modal-body" id="diskList">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- connection tooltip -->
+    <div class="connection-tooltip hidden" id="connectionTooltip">
+      <div class="tooltip-header">
+        <span class="tooltip-title">CONNECTION STATUS</span>
+      </div>
+      <div class="tooltip-divider">════════════════════════════════</div>
+      
+      <div class="tooltip-row">
+        <span class="tooltip-label">Primary:</span>
+        <span class="tooltip-value" id="tooltipPrimary">--</span>
+      </div>
+      <div class="tooltip-row">
+        <span class="tooltip-label">Backup:</span>
+        <span class="tooltip-value tooltip-backup" id="tooltipBackup">--</span>
+      </div>
+      
+      <div class="tooltip-divider-thin">────────────────────────────────</div>
+      
+      <div class="tooltip-row">
+        <span class="tooltip-label">USB:</span>
+        <span class="tooltip-value" id="tooltipUsb">Not connected</span>
+      </div>
+      <div class="tooltip-row">
+        <span class="tooltip-label">Wireless:</span>
+        <span class="tooltip-value" id="tooltipWireless">Not connected</span>
+      </div>
+      
+      <div class="tooltip-divider-thin">────────────────────────────────</div>
+      
+      <div class="tooltip-row">
+        <span class="tooltip-label">Latency:</span>
+        <span class="tooltip-value" id="tooltipLatency">--</span>
+      </div>
+      <div class="tooltip-row">
+        <span class="tooltip-label">Quality:</span>
+        <span class="tooltip-value" id="tooltipQuality">--</span>
+      </div>
+      
+      <div class="tooltip-actions" id="tooltipActions">
+        <button class="tooltip-btn" id="tooltipSwitchBtn">Switch to --</button>
+      </div>
+    </div>
+
+    <!-- toasts -->
+    <div class="toast-container" id="toastContainer">
+    </div>
+
+    <!-- scripts -->
+    <script src="modules/api-client.js"></script>
+    <script src="modules/state-manager.js"></script>
+    <script src="modules/gauge.js"></script>
+    <script src="modules/graph.js"></script>
+    <script src="modules/animations.js"></script>
+    <script src="modules/dashboard.js"></script>
+    <script src="modules/settings.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
