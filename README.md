@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# VR Monitor
-=======
 # Quest Monitor
->>>>>>> fa21106db5f9994b323bfd9c06d8bec5c236281c
 
 real-time performance tracking for quest 3 + pc during game dev + usb and wireless adb support.
 
@@ -68,7 +64,4 @@ if you don't have the wireless package sideloaded, just use usb, preferably the 
 - gpu metrics if a nonhacky way shows up
 - compare exported data
 - alerts/thresholds
-<<<<<<< HEAD
 
-=======
->>>>>>> fa21106db5f9994b323bfd9c06d8bec5c236281c
