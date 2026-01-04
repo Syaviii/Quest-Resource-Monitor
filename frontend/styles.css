@@ -566,6 +566,55 @@ body {
   color: var(--status-alert);
 }
 
+/* Horizontal Button Selectors */
+.polling-selector,
+.graph-period-selector {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+
+.interval-button,
+.period-button {
+    padding: 6px 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #888;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 200ms ease;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.interval-button:hover,
+.period-button:hover {
+    border-color: #555;
+    color: #aaa;
+}
+
+.interval-button.active,
+.period-button.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    color: #ffffff;
+}
+
+/* Metric Visibility */
+.gauge-hidden {
+    display: none !important;
+}
+
+.no-metrics {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-label);
+    border: 1px dashed var(--border-muted);
+}
+
 /* ========== Main Content ========== */
 #content {
   flex: 1;
