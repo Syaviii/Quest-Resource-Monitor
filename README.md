@@ -30,9 +30,9 @@ if you don't have the wireless package sideloaded, just use usb, preferably the 
 
 - electron app isnt fully setup and packaged yet!!!
 - gpu monitoring (alot of cases to cover and no clear way to monitor the quest's gpu yet)
-- thermal zone breakdown (no clear way to monitor the thermal zones yet)
-- wireless adb sometimes drops if you leave it (cause not pinpointed yet)
-- network stats for quest need better parsing and denoising
+- thermal breakdown (no clear way to monitor the thermal zones yet)
+- wireless adb drops and can have issues reconnecting after being left idle (Issue due to how the quest sleeps, no fix but can try to make reconnection stable)
+- network stats are fucked up!!!
 - quest storage stats are not implemented yet as for some reason theres no clear way to mount or monitor it?
 
 ## tech stack
@@ -64,4 +64,5 @@ if you don't have the wireless package sideloaded, just use usb, preferably the 
 - gpu metrics if a nonhacky way shows up
 - compare exported data
 - alerts/thresholds
+
 
