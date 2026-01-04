@@ -5,7 +5,7 @@ __pycache__/
 venv/
 .venv/
 
-# Build outputs
+# builds
 dist/
 build/
 
@@ -37,5 +37,6 @@ htmlcov/
 # Flask
 instance/
 
-# App Data
+# app
 backend/data/
+exports/

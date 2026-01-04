@@ -81,6 +81,10 @@ const APIClient = (function() { // api url
     async function getDevice(deviceId) {
         return request(`/devices/${deviceId}`);
     }
+
+    async function getDeviceInfo(deviceId) {
+        return request(`/devices/${deviceId}/info`);
+    }
     
     // metrics
     
@@ -211,6 +215,7 @@ const APIClient = (function() { // api url
         getHealth,
         getDevices,
         getDevice,
+        getDeviceInfo,
         getCurrentMetrics,
         getMetricsHistory,
         getNetworkStats,

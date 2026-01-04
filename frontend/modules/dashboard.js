@@ -4,12 +4,15 @@
  */
 
 const Dashboard = (function() {
+    let lastSessionId = null;
     
     function init() {
         Gauge.initializeAll();
         
         setupEventListeners();
         setupStateSubscriptions();
+        
+        loadSystemInfo(); // specific system decoration
         
         console.log('dashboard init');
     }
@@ -39,6 +42,14 @@ const Dashboard = (function() {
                 closeDiskDropdown();
             }
         });
+
+        // Export button
+        const exportBtn = document.getElementById('exportButton');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                if (lastSessionId) exportSession(lastSessionId);
+            });
+        }
     }
     
     function setupStateSubscriptions() {
@@ -101,12 +112,25 @@ const Dashboard = (function() {
                 // Stop recording
                 const response = await APIClient.stopRecording();
                 if (response.success) {
+                    lastSessionId = response.data.session_id;
                     StateManager.updateRecording({
                         active: false,
                         sessionId: null,
                         elapsed: 0,
                         startTime: null
                     });
+                    
+                    // Show export button
+                    const exportBtn = document.getElementById('exportButton');
+                    if (exportBtn) {
+                        exportBtn.style.display = 'inline-flex';
+                        // Auto-hide after 30s
+                        setTimeout(() => {
+                            if (!StateManager.getState('ui.recording').active) {
+                                exportBtn.style.display = 'none';
+                            }
+                        }, 30000);
+                    }
                 }
             } else {
                 // Start recording
@@ -179,6 +203,10 @@ const Dashboard = (function() {
         if (recording.active) {
             button.classList.add('active');
             timer.classList.add('active');
+            
+            // Hide export button while recording
+            const exportBtn = document.getElementById('exportButton');
+            if (exportBtn) exportBtn.style.display = 'none';
         } else {
             button.classList.remove('active');
             timer.classList.remove('active');
@@ -657,7 +685,124 @@ const Dashboard = (function() {
     }
     
     /**
-     * backend dead
+     * export session to csv
+     */
+    async function exportSession(sessionId) {
+        try {
+            const response = await APIClient.exportSession(sessionId, 'csv');
+            
+            if (response.success && response.data) {
+                console.log('Export successful:', response.data.path);
+                
+                if (window.App && App.showToast) {
+                    App.showToast(
+                        `Saved to: ${response.data.path}`,
+                    );
+                }
+            }
+        } catch (error) {
+            console.error('export failed:', error);
+            if (window.App && App.showToast) {
+                App.showToast('EXPORT FAILED', error.message, 'error');
+            }
+        }
+    }
+
+    /**
+     * load system decoration info
+     */
+    async function loadSystemInfo() {
+        try {
+            // PC Info
+            const pcRes = await APIClient.getDeviceInfo('pc');
+            if (pcRes.success && pcRes.data) {
+                displaySystemInfo('pc', pcRes.data);
+            }
+            
+            // Quest Info
+            const questRes = await APIClient.getDeviceInfo('quest_3');
+            if (questRes.success && questRes.data) {
+                displaySystemInfo('quest_3', questRes.data);
+            }
+        } catch (error) {
+            console.warn('Decoration info load failed:', error);
+        }
+    }
+
+    function displaySystemInfo(device, info) {
+        
+        // CPU
+        if (device === 'pc') {
+            const cpuText = `[${info.cpu_model || 'Unknown CPU'}] [${info.cpu_cores}c/${info.cpu_threads}t]`;
+            injectDecoration('pc', 'cpu', cpuText);
+            
+            const ramText = `[Total: ${info.ram_total_gb} GB] [${info.os}]`;
+            injectDecoration('pc', 'ram', ramText);
+        }
+        
+        // Quest
+        if (device === 'quest_3') {
+            const battText = `[model: ${info.model || 'Quest 3'}] [android ${info.android_version || '?'}]`;
+            // Only if battery gauge exists
+            injectDecoration('quest_3', 'battery', battText);
+            
+            if (info.wifi_ssid) {
+                const netText = `[WiFi: ${info.wifi_ssid}]`;
+                const netContainer = document.querySelector('#quest-net-avg')?.closest('.network-stats');
+                if (netContainer) {
+                    if (getComputedStyle(netContainer).position === 'static') {
+                        netContainer.style.position = 'relative';
+                    }
+                    
+                    let dec = netContainer.querySelector('.gauge-system-info');
+                    if (!dec) {
+                        dec = document.createElement('div');
+                        dec.className = 'gauge-system-info';
+                        netContainer.appendChild(dec);
+                    }
+                    dec.textContent = netText;
+                }
+            }
+        }
+    }
+
+    function injectDecoration(device, metric, text) {
+        // Find the metric row
+        const rowId = `${device.replace('_', '-')}-${metric}-row`;
+        const rowEl = document.getElementById(rowId);
+        
+        if (rowEl) {
+            // Check if decoration exists
+            let deco = rowEl.querySelector('.gauge-system-info');
+            if (!deco) {
+                deco = document.createElement('div');
+                deco.className = 'gauge-system-info';
+                rowEl.appendChild(deco);
+            }
+            deco.textContent = text;
+        } else {
+            // Fallback to gauge container if row not found
+            const gaugeId = `${device.replace('_', '-')}-${metric}-gauge`;
+            const gaugeEl = document.getElementById(gaugeId);
+            if (gaugeEl) {
+                const parent = gaugeEl.closest('.metric-row') || gaugeEl.parentElement;
+                if (getComputedStyle(parent).position === 'static') {
+                    parent.style.position = 'relative';
+                }
+                
+                let deco = parent.querySelector('.gauge-system-info');
+                if (!deco) {
+                    deco = document.createElement('div');
+                    deco.className = 'gauge-system-info';
+                    parent.appendChild(deco);
+                }
+                deco.textContent = text;
+            }
+        }
+    }
+
+    /**
+     * show offline state
      */
     function showOfflineState() {
         StateManager.setState('app.online', false);
@@ -666,7 +811,7 @@ const Dashboard = (function() {
     }
     
     /**
-     * backend alive
+     * show online state
      */
     function showOnlineState() {
         StateManager.setState('app.online', true);
@@ -684,6 +829,8 @@ const Dashboard = (function() {
         showOfflineState,
         showOnlineState,
         updateDeviceStatusUI,
-        updateQuestCardState
+        updateQuestCardState,
+        exportSession,
+        loadSystemInfo
     };
 })();

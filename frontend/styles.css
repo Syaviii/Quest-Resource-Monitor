@@ -995,6 +995,10 @@ body {
 }
 
 /* Metric Labels */
+.metric-row {
+  position: relative;
+}
+
 .metric-label {
   display: flex;
   flex-direction: column;
@@ -1796,6 +1800,23 @@ body {
 
 .toast-content {
   flex: 1;
+}
+
+/* System Info Decoration */
+.gauge-system-info {
+    font-size: 9px;
+    color: #444;
+    position: absolute;
+    bottom: -6px;
+    right: 0;
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: nowrap;
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 10;
 }
 
 .toast-title {

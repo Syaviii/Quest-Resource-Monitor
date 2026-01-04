@@ -53,6 +53,29 @@ def get_device(device_id: str):
     return success_response(device.to_dict())
 
 
+@api.route('/devices/<device_id>/info', methods=['GET'])
+def get_device_info(device_id):
+    """Get static system info for decoration."""
+    import platform
+    import psutil
+    from core.adb_handler import adb
+    
+    if device_id == 'pc':
+        return success_response({
+            'cpu_model': platform.processor(),
+            'cpu_cores': psutil.cpu_count(logical=False),
+            'cpu_threads': psutil.cpu_count(logical=True),
+            'os': f"{platform.system()} {platform.release()}",
+            'ram_total_gb': round(psutil.virtual_memory().total / (1024**3), 1)
+        })
+    elif device_id == 'quest_3':
+        # Retrieve info from ADB if possible
+        info = adb.get_device_info()
+        return success_response(info)
+    
+    raise DeviceNotFoundError(device_id)
+
+
 # ========== Metrics Routes ==========
 
 @api.route('/metrics/current', methods=['GET'])
@@ -273,6 +296,7 @@ def export_recording():
     # export to json/csv
     session_id = request.args.get('session_id')
     export_format = request.args.get('format', 'json')
+    save_to_disk = request.args.get('save_to_disk', 'true').lower() == 'true'
     
     if not session_id:
         raise ValidationError("Missing required parameter: session_id")
@@ -284,6 +308,7 @@ def export_recording():
     # Get all metrics for session
     metrics = db.get_session_metrics(session_id)
     
+    # Prepare data based on format
     if export_format == 'json':
         # Organize by device and metric
         result = {
@@ -309,23 +334,63 @@ def export_recording():
             if m.battery is not None and "battery" in device_data:
                 device_data["battery"].append({"timestamp": m.timestamp, "value": m.battery})
         
-        return success_response(result)
-    
+        content = result
+        is_binary = False
+        
     elif export_format == 'csv':
         # Build CSV string
         lines = ["timestamp,device,cpu,ram,temp,battery,disk"]
         for m in metrics:
             lines.append(f"{m.timestamp},{m.device_id},{m.cpu},{m.ram},{m.temp},{m.battery},{m.disk}")
+        content = "\n".join(lines)
+        is_binary = False
         
-        from flask import Response
-        return Response(
-            "\n".join(lines),
-            mimetype="text/csv",
-            headers={"Content-Disposition": f"attachment;filename=session_{session_id}.csv"}
-        )
-    
     else:
         raise ValidationError("Invalid format. Must be 'json' or 'csv'")
+
+    # Save to disk or stream
+    if save_to_disk:
+        import os
+        import json
+        
+        # Create exports directory
+        export_dir = os.path.join(os.getcwd(), 'exports')
+        os.makedirs(export_dir, exist_ok=True)
+        
+        filename = f"session_{session_id}.{export_format}"
+        filepath = os.path.join(export_dir, filename)
+        
+        try:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                if isinstance(content, dict):
+                    json.dump(content, f, indent=2)
+                else:
+                    f.write(content)
+            
+            return success_response({
+                "exported": True,
+                "path": os.path.abspath(filepath),
+                "filename": filename
+            })
+        except Exception as e:
+            raise ValidationError(f"Failed to save file: {str(e)}")
+            
+    else:
+        # Stream response
+        from flask import Response
+        if isinstance(content, dict):
+            import json
+            return Response(
+                json.dumps(content),
+                mimetype="application/json",
+                headers={"Content-Disposition": f"attachment;filename=session_{session_id}.json"}
+            )
+        else:
+            return Response(
+                content,
+                mimetype="text/csv",
+                headers={"Content-Disposition": f"attachment;filename=session_{session_id}.csv"}
+            )
 
 
 # ========== Debug Routes ==========
