@@ -364,7 +364,7 @@ class MetricsCollector:
             now = time.time()
             
             # read net/dev
-            result = adb.shell_command("cat /proc/net/dev")
+            result = adb.execute_shell("cat /proc/net/dev")
             if not result:
                 return None
             

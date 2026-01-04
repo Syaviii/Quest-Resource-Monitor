@@ -31,14 +31,14 @@
         <span class="loading-text">CONNECTING TO BACKEND...</span>
       </div>
     </div>
-    
+
     <!-- connection banner -->
     <div id="connectionBanner" class="connection-banner hidden">
       <span class="banner-icon">⚠</span>
       <span class="banner-text">Backend disconnected. Reconnecting...</span>
       <div class="banner-spinner"></div>
     </div>
-    
+
     <div id="app">
       <!-- top bar -->
       <header id="topBar">
@@ -61,8 +61,15 @@
               <span class="status-text">Quest 3 Disconnected</span>
               <!-- badges -->
               <div class="connection-badges" id="connectionBadges">
-                <span class="conn-badge" id="connUsb" title="USB Connection">[USB]</span>
-                <span class="conn-badge" id="connWifi" title="Wireless Connection">[WIRELESS]</span>
+                <span class="conn-badge" id="connUsb" title="USB Connection"
+                  >[USB]</span
+                >
+                <span
+                  class="conn-badge"
+                  id="connWifi"
+                  title="Wireless Connection"
+                  >[WIRELESS]</span
+                >
               </div>
             </div>
           </div>
@@ -75,31 +82,41 @@
         <div class="top-bar-right">
           <!-- recording -->
           <div class="recording-control">
-            <span class="recording-timer" id="recordingTimer">00:00:00</span>
+            <span class="recording-timer" id="recordingTimer">[00:00:00]</span>
             <button class="record-button" id="recordButton">
               <span class="record-dot">●</span>
               <span class="record-text">RECORD</span>
             </button>
           </div>
-          <span class="decorative-label top-right">[RECORD]</span>
-          
+
           <!-- settings -->
           <div class="settings-dropdown" id="settingsDropdown">
-            <button class="settings-trigger" id="settingsTrigger">[SETTINGS]</button>
+            <button class="settings-trigger gear-button" id="settingsTrigger" title="Settings">
+              <span>⚙</span>
+            </button>
             <div class="settings-menu hidden" id="settingsMenu">
               <div class="settings-section">
                 <div class="settings-label">CONNECTION PRIORITY</div>
                 <div class="settings-options">
                   <label class="settings-option">
-                    <input type="radio" name="connPriority" value="usb_first" checked>
+                    <input
+                      type="radio"
+                      name="connPriority"
+                      value="usb_first"
+                      checked
+                    />
                     <span>USB First</span>
                   </label>
                   <label class="settings-option">
-                    <input type="radio" name="connPriority" value="wireless_first">
+                    <input
+                      type="radio"
+                      name="connPriority"
+                      value="wireless_first"
+                    />
                     <span>Wireless First</span>
                   </label>
                   <label class="settings-option">
-                    <input type="radio" name="connPriority" value="auto">
+                    <input type="radio" name="connPriority" value="auto" />
                     <span>Auto</span>
                   </label>
                 </div>
@@ -108,8 +125,15 @@
               <div class="settings-section">
                 <div class="settings-label">WIRELESS IP</div>
                 <div class="settings-row">
-                  <input type="text" class="settings-input" id="wirelessIpInput" placeholder="192.168.x.x">
-                  <button class="settings-btn" id="discoverBtn">DISCOVER</button>
+                  <input
+                    type="text"
+                    class="settings-input"
+                    id="wirelessIpInput"
+                    placeholder="192.168.x.x"
+                  />
+                  <button class="settings-btn" id="discoverBtn">
+                    DISCOVER
+                  </button>
                 </div>
               </div>
               <div class="settings-divider"></div>
@@ -117,11 +141,11 @@
                 <div class="settings-label">AUTO-CONNECTION</div>
                 <div class="settings-checkboxes">
                   <label class="settings-checkbox">
-                    <input type="checkbox" id="autoEnableWireless" checked>
+                    <input type="checkbox" id="autoEnableWireless" checked />
                     <span>Auto-enable wireless on USB</span>
                   </label>
                   <label class="settings-checkbox">
-                    <input type="checkbox" id="autoFallback" checked>
+                    <input type="checkbox" id="autoFallback" checked />
                     <span>Auto-fallback if connection drops</span>
                   </label>
                 </div>
@@ -153,15 +177,20 @@
                 <div class="settings-label">POLL INTERVAL</div>
                 <div class="settings-options">
                   <label class="settings-option">
-                    <input type="radio" name="pollInterval" value="5">
+                    <input type="radio" name="pollInterval" value="5" />
                     <span>5s</span>
                   </label>
                   <label class="settings-option">
-                    <input type="radio" name="pollInterval" value="10" checked>
+                    <input
+                      type="radio"
+                      name="pollInterval"
+                      value="10"
+                      checked
+                    />
                     <span>10s</span>
                   </label>
                   <label class="settings-option">
-                    <input type="radio" name="pollInterval" value="30">
+                    <input type="radio" name="pollInterval" value="30" />
                     <span>30s</span>
                   </label>
                 </div>
@@ -171,19 +200,24 @@
                 <div class="settings-label">LAYOUT</div>
                 <div class="settings-options">
                   <label class="settings-option">
-                    <input type="radio" name="layoutMode" value="side-by-side" checked>
+                    <input
+                      type="radio"
+                      name="layoutMode"
+                      value="side-by-side"
+                      checked
+                    />
                     <span>Side by Side</span>
                   </label>
                   <label class="settings-option">
-                    <input type="radio" name="layoutMode" value="stacked">
+                    <input type="radio" name="layoutMode" value="stacked" />
                     <span>Stacked</span>
                   </label>
                   <label class="settings-option">
-                    <input type="radio" name="layoutMode" value="quest-only">
+                    <input type="radio" name="layoutMode" value="quest-only" />
                     <span>Quest Only</span>
                   </label>
                   <label class="settings-option">
-                    <input type="radio" name="layoutMode" value="pc-only">
+                    <input type="radio" name="layoutMode" value="pc-only" />
                     <span>PC Only</span>
                   </label>
                 </div>
@@ -193,18 +227,22 @@
                 <div class="settings-label">DISPLAY</div>
                 <div class="settings-checkboxes">
                   <label class="settings-checkbox">
-                    <input type="checkbox" id="compactMode">
+                    <input type="checkbox" id="compactMode" />
                     <span>Compact mode</span>
                   </label>
                   <label class="settings-checkbox">
-                    <input type="checkbox" id="autoCollapseDisconnected" checked>
+                    <input
+                      type="checkbox"
+                      id="autoCollapseDisconnected"
+                      checked
+                    />
                     <span>Auto-collapse disconnected</span>
                   </label>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+          </div>
 
         <div class="top-bar-decoration"></div>
       </header>
@@ -285,7 +323,9 @@
                 </div>
                 <div class="metric-label">
                   <span class="label-primary">RAM USAGE</span>
-                  <span class="label-secondary" id="pc-ram-detail">-- / -- GB</span>
+                  <span class="label-secondary" id="pc-ram-detail"
+                    >-- / -- GB</span
+                  >
                 </div>
               </div>
               <div class="metric-right">
@@ -301,16 +341,25 @@
             </div>
 
             <!-- disks header -->
-            <div class="section-header">
+            <div class="section-header disk-section">
               <span class="section-title">STORAGE</span>
-              <button class="disk-select-button" id="diskSelectButton" title="Select disks">
-                <span>⚙</span>
-              </button>
+              <div class="disk-dropdown" id="diskDropdown">
+                <button
+                  class="disk-select-button"
+                  id="diskSelectButton"
+                  title="Select disks"
+                >
+                  <span>≡</span>
+                </button>
+                <div class="disk-menu hidden" id="diskMenu">
+                  <div class="disk-menu-header">SELECT DISKS</div>
+                  <div class="disk-list" id="diskList"></div>
+                </div>
+              </div>
             </div>
-            
+
             <!-- disk rows -->
-            <div id="diskRowsContainer">
-            </div>
+            <div id="diskRowsContainer"></div>
 
             <!-- network header -->
             <div class="section-header">
@@ -412,7 +461,9 @@
                 </div>
                 <div class="metric-label">
                   <span class="label-primary">RAM USAGE</span>
-                  <span class="label-secondary" id="quest-3-ram-detail">-- / -- GB</span>
+                  <span class="label-secondary" id="quest-3-ram-detail"
+                    >-- / -- GB</span
+                  >
                 </div>
               </div>
               <div class="metric-right">
@@ -496,7 +547,9 @@
                 </div>
                 <div class="metric-label">
                   <span class="label-primary">BATTERY</span>
-                  <span class="label-secondary" id="quest-3-battery-status">remaining</span>
+                  <span class="label-secondary" id="quest-3-battery-status"
+                    >remaining</span
+                  >
                 </div>
                 <div class="battery-info" id="quest-3-battery-info">
                   <span class="battery-rate" id="quest-3-battery-rate">—</span>
@@ -519,6 +572,34 @@
               <canvas id="quest-3-battery-chart"></canvas>
             </div>
 
+            <!-- storage header -->
+            <div class="section-header">
+              <span class="section-title">STORAGE</span>
+            </div>
+            <div class="storage-stats" id="questStorageStats">
+              <div class="storage-info">
+                <span class="storage-label">Internal Shared</span>
+                <span class="storage-value" id="quest-storage-text"
+                  >-- / -- GB</span
+                >
+              </div>
+              <div class="storage-bar-container">
+                <div
+                  class="storage-bar"
+                  id="quest-storage-bar"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <div class="storage-details">
+                <span class="detail-item" id="quest-storage-free"
+                  >-- GB free</span
+                >
+                <span class="detail-item" id="quest-storage-percent"
+                  >--% used</span
+                >
+              </div>
+            </div>
+
             <!-- Network Stats Section -->
             <div class="section-header">
               <span class="section-title">NETWORK</span>
@@ -526,7 +607,9 @@
             <div class="network-stats" id="questNetworkStats">
               <div class="network-row">
                 <span class="network-label">↓ Download</span>
-                <span class="network-value" id="quest-net-download">-- MB/s</span>
+                <span class="network-value" id="quest-net-download"
+                  >-- MB/s</span
+                >
               </div>
               <div class="network-row">
                 <span class="network-label">↑ Upload</span>
@@ -535,24 +618,6 @@
               <div class="network-row avg">
                 <span class="network-label">5min avg</span>
                 <span class="network-value" id="quest-net-avg">-- MB/s</span>
-              </div>
-            </div>
-
-            <!-- storage header -->
-            <div class="section-header">
-              <span class="section-title">STORAGE</span>
-            </div>
-            <div class="storage-stats" id="questStorageStats">
-              <div class="storage-info">
-                <span class="storage-label">Internal Shared</span>
-                <span class="storage-value" id="quest-storage-text">-- / -- GB</span>
-              </div>
-              <div class="storage-bar-container">
-                <div class="storage-bar" id="quest-storage-bar" style="width: 0%"></div>
-              </div>
-              <div class="storage-details">
-                <span class="detail-item" id="quest-storage-free">-- GB free</span>
-                <span class="detail-item" id="quest-storage-percent">--% used</span>
               </div>
             </div>
           </div>
@@ -585,8 +650,7 @@
             <span class="modal-title">SELECT DISKS</span>
             <button class="modal-close" id="diskModalClose">×</button>
           </div>
-          <div class="modal-body" id="diskList">
-          </div>
+          <div class="modal-body" id="diskList"></div>
         </div>
       </div>
     </div>
@@ -596,8 +660,8 @@
       <div class="tooltip-header">
         <span class="tooltip-title">CONNECTION STATUS</span>
       </div>
-      <div class="tooltip-divider">════════════════════════════════</div>
-      
+      <div class="tooltip-divider"></div>
+
       <div class="tooltip-row">
         <span class="tooltip-label">Primary:</span>
         <span class="tooltip-value" id="tooltipPrimary">--</span>
@@ -606,9 +670,9 @@
         <span class="tooltip-label">Backup:</span>
         <span class="tooltip-value tooltip-backup" id="tooltipBackup">--</span>
       </div>
-      
-      <div class="tooltip-divider-thin">────────────────────────────────</div>
-      
+
+      <div class="tooltip-divider-thin"></div>
+
       <div class="tooltip-row">
         <span class="tooltip-label">USB:</span>
         <span class="tooltip-value" id="tooltipUsb">Not connected</span>
@@ -617,9 +681,9 @@
         <span class="tooltip-label">Wireless:</span>
         <span class="tooltip-value" id="tooltipWireless">Not connected</span>
       </div>
-      
-      <div class="tooltip-divider-thin">────────────────────────────────</div>
-      
+
+      <div class="tooltip-divider-thin"></div>
+
       <div class="tooltip-row">
         <span class="tooltip-label">Latency:</span>
         <span class="tooltip-value" id="tooltipLatency">--</span>
@@ -628,15 +692,14 @@
         <span class="tooltip-label">Quality:</span>
         <span class="tooltip-value" id="tooltipQuality">--</span>
       </div>
-      
+
       <div class="tooltip-actions" id="tooltipActions">
         <button class="tooltip-btn" id="tooltipSwitchBtn">Switch to --</button>
       </div>
     </div>
 
     <!-- toasts -->
-    <div class="toast-container" id="toastContainer">
-    </div>
+    <div class="toast-container" id="toastContainer"></div>
 
     <!-- scripts -->
     <script src="modules/api-client.js"></script>

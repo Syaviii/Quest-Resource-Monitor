@@ -29,20 +29,16 @@ const Dashboard = (function() {
         // Disk select button
         const diskButton = document.getElementById('diskSelectButton');
         if (diskButton) {
-            diskButton.addEventListener('click', openDiskModal);
+            diskButton.addEventListener('click', toggleDiskDropdown);
         }
         
-        // Disk modal close
-        const modalClose = document.getElementById('diskModalClose');
-        if (modalClose) {
-            modalClose.addEventListener('click', closeDiskModal);
-        }
-        
-        // Modal backdrop click
-        const modal = document.getElementById('diskModal');
-        if (modal) {
-            modal.querySelector('.modal-backdrop')?.addEventListener('click', closeDiskModal);
-        }
+        // Close disk dropdown on outside click
+        document.addEventListener('click', (e) => {
+            const diskDropdown = document.getElementById('diskDropdown');
+            if (diskDropdown && !e.target.closest('.disk-dropdown')) {
+                closeDiskDropdown();
+            }
+        });
     }
     
     function setupStateSubscriptions() {
@@ -168,7 +164,7 @@ const Dashboard = (function() {
         const minutes = Math.floor((elapsed % 3600) / 60);
         const seconds = elapsed % 60;
         
-        timer.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        timer.textContent = `[${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}]`;
     }
     
     /**
@@ -186,7 +182,7 @@ const Dashboard = (function() {
         } else {
             button.classList.remove('active');
             timer.classList.remove('active');
-            timer.textContent = '00:00:00';
+            timer.textContent = '[00:00:00]';
             stopRecordingTimer();
         }
     }
@@ -326,7 +322,6 @@ const Dashboard = (function() {
         const freeEl = document.getElementById('quest-storage-free');
         const pctEl = document.getElementById('quest-storage-percent');
         
-        // Update text: "350.5 / 512.0 GB"
         if (textEl) {
             textEl.textContent = `${stats.used_gb.toFixed(1)} / ${stats.total_gb.toFixed(1)} GB`;
         }
@@ -336,11 +331,11 @@ const Dashboard = (function() {
             barEl.style.width = `${stats.percent_used}%`;
             
             if (stats.percent_used > 90) {
-                barEl.style.backgroundColor = 'var(--status-alert)';
-            } else if (stats.percent_used > 75) {
-                barEl.style.backgroundColor = 'var(--status-warning)';
+                barEl.style.backgroundColor = 'var(--gauge-alert)';
+            } else if (stats.percent_used > 70) {
+                barEl.style.backgroundColor = 'var(--gauge-warning)';
             } else {
-                barEl.style.backgroundColor = 'var(--accent-primary)';
+                barEl.style.backgroundColor = 'var(--gauge-normal)';
             }
         }
         
@@ -453,15 +448,45 @@ const Dashboard = (function() {
                 // Create new row
                 row = createDiskRow(disk);
                 container.appendChild(row);
+            } else {
+                // update existing row values
+                const usedDisplay = disk.used_gb > 1000 
+                    ? `${(disk.used_gb / 1024).toFixed(1)} TB` 
+                    : `${disk.used_gb.toFixed(1)} GB`;
+                const totalDisplay = disk.total_gb > 1000 
+                    ? `${(disk.total_gb / 1024).toFixed(1)} TB` 
+                    : `${disk.total_gb.toFixed(1)} GB`;
+                const freeGb = disk.total_gb - disk.used_gb;
+                const freeDisplay = freeGb > 1000 
+                    ? `${(freeGb / 1024).toFixed(1)} TB free` 
+                    : `${freeGb.toFixed(1)} GB free`;
+                const percent = disk.total_gb > 0 ? (disk.used_gb / disk.total_gb * 100) : 0;
+                
+                const textEl = document.getElementById(`pc-disk-${diskId}-text`);
+                const barEl = document.getElementById(`pc-disk-${diskId}-bar`);
+                const freeEl = document.getElementById(`pc-disk-${diskId}-free`);
+                const percentEl = document.getElementById(`pc-disk-${diskId}-percent`);
+                
+                if (textEl) textEl.textContent = `${usedDisplay} / ${totalDisplay}`;
+                if (barEl) {
+                    barEl.style.width = `${percent.toFixed(1)}%`;
+                    
+                    if (percent > 90) {
+                        barEl.style.backgroundColor = 'var(--gauge-alert)';
+                    } else if (percent > 70) {
+                        barEl.style.backgroundColor = 'var(--gauge-warning)';
+                    } else {
+                        barEl.style.backgroundColor = 'var(--gauge-normal)';
+                    }
+                }
+                if (freeEl) freeEl.textContent = freeDisplay;
+                if (percentEl) percentEl.textContent = `${percent.toFixed(1)}% used`;
             }
-            
-            // Update the gauge
-            Gauge.updateGauge('pc', `disk-${diskId}`, disk.used_gb, disk.total_gb);
         });
         
         // Show message if no disks selected
         if (disks.length === 0 && !container.querySelector('.no-disks-message')) {
-            container.innerHTML = '<div class="no-disks-message">No disks selected. Click ⚙ to add.</div>';
+            container.innerHTML = '<div class="no-disks-message">No disks selected. Click ≡ to add.</div>';
         } else if (disks.length > 0) {
             const msg = container.querySelector('.no-disks-message');
             if (msg) msg.remove();
@@ -482,32 +507,38 @@ const Dashboard = (function() {
         const diskId = sanitizeDiskId(disk.mount_point);
         const rowId = `pc-disk-${diskId}-row`;
         
+        const usedDisplay = disk.used_gb > 1000 
+            ? `${(disk.used_gb / 1024).toFixed(1)} TB` 
+            : `${disk.used_gb.toFixed(1)} GB`;
+        const totalDisplay = disk.total_gb > 1000 
+            ? `${(disk.total_gb / 1024).toFixed(1)} TB` 
+            : `${disk.total_gb.toFixed(1)} GB`;
+        const freeGb = disk.total_gb - disk.used_gb;
+        const freeDisplay = freeGb > 1000 
+            ? `${(freeGb / 1024).toFixed(1)} TB free` 
+            : `${freeGb.toFixed(1)} GB free`;
+        const percent = disk.total_gb > 0 ? (disk.used_gb / disk.total_gb * 100) : 0;
+        
+        let colorVar = 'var(--gauge-normal)';
+        if (percent > 90) colorVar = 'var(--gauge-alert)';
+        else if (percent > 70) colorVar = 'var(--gauge-warning)';
+        
         const wrapper = document.createElement('div');
-        wrapper.className = 'disk-metric-row';
+        wrapper.className = 'disk-metric-row storage-stats';
         wrapper.dataset.mount = disk.mount_point;
+        wrapper.id = rowId;
         
         wrapper.innerHTML = `
-            <div class="metric-row" id="${rowId}">
-                <div class="metric-left">
-                    <div class="gauge-container" id="pc-disk-${diskId}-gauge">
-                        <svg class="gauge" viewBox="0 0 200 200">
-                            <circle class="gauge-bg" cx="100" cy="100" r="80" />
-                            <circle class="gauge-progress" cx="100" cy="100" r="80" data-value="0" />
-                            <circle class="gauge-inner" cx="100" cy="100" r="56" />
-                        </svg>
-                        <div class="gauge-value">
-                            <span class="value-number" id="pc-disk-${diskId}-value">--</span>
-                            <span class="value-unit">%</span>
-                        </div>
-                    </div>
-                    <div class="metric-label">
-                        <span class="label-primary">${disk.mount_point}</span>
-                        <span class="label-secondary" id="pc-disk-${diskId}-detail">-- / -- GB</span>
-                    </div>
-                </div>
-                <div class="metric-right">
-                    <span class="status-marker normal">─</span>
-                </div>
+            <div class="storage-info">
+                <span class="storage-label">${disk.mount_point}</span>
+                <span class="storage-value" id="pc-disk-${diskId}-text">${usedDisplay} / ${totalDisplay}</span>
+            </div>
+            <div class="storage-bar-container">
+                <div class="storage-bar" id="pc-disk-${diskId}-bar" style="width: ${percent.toFixed(1)}%; background-color: ${colorVar}"></div>
+            </div>
+            <div class="storage-details">
+                <span class="detail-item" id="pc-disk-${diskId}-free">${freeDisplay}</span>
+                <span class="detail-item" id="pc-disk-${diskId}-percent">${percent.toFixed(1)}% used</span>
             </div>
         `;
         
@@ -530,35 +561,36 @@ const Dashboard = (function() {
         });
     }
     
-    /**
-     * show disk picker
-     */
-    async function openDiskModal() {
-        const modal = document.getElementById('diskModal');
-        const diskList = document.getElementById('diskList');
+    let diskDropdownOpen = false;
+    
+    async function toggleDiskDropdown(e) {
+        e.stopPropagation();
+        const menu = document.getElementById('diskMenu');
         
-        if (!modal || !diskList) return;
-        
-        try {
-            const response = await APIClient.getAllDisks();
-            if (response.success && response.data) {
-                renderDiskList(response.data.disks);
-                StateManager.updateDisks(response.data.disks);
+        if (diskDropdownOpen) {
+            closeDiskDropdown();
+        } else {
+            // Fetch and render disks
+            try {
+                const response = await APIClient.getAllDisks();
+                if (response.success && response.data) {
+                    renderDiskList(response.data.disks);
+                    StateManager.updateDisks(response.data.disks);
+                }
+            } catch (error) {
+                console.error('Failed to fetch disks:', error);
             }
-        } catch (error) {
-            console.error('Failed to fetch disks:', error);
+            
+            menu.classList.remove('hidden');
+            diskDropdownOpen = true;
         }
-        
-        modal.classList.remove('hidden');
     }
     
-    /**
-     * hide disk picker
-     */
-    function closeDiskModal() {
-        const modal = document.getElementById('diskModal');
-        if (modal) {
-            modal.classList.add('hidden');
+    function closeDiskDropdown() {
+        const menu = document.getElementById('diskMenu');
+        if (menu) {
+            menu.classList.add('hidden');
+            diskDropdownOpen = false;
         }
     }
     

@@ -10,6 +10,7 @@ const App = (function() {
     let pollTimer = null;
     let devicePollTimer = null;
     let isPolling = false;
+    let pollCounter = 0;
     
     async function init() {
         console.log('booting...');
@@ -205,8 +206,21 @@ const App = (function() {
                 Dashboard.updateNetworkStats(response.data);
             }
         } catch (error) {
-            // Silently fail, network stats are secondary
+            // Silently fail
             console.warn('Network stats poll failed');
+        }
+    }
+    
+    async function pollQuestStorage() {
+        // Quest storage check
+        try {
+            const response = await APIClient.getQuestStorage();
+            if (response.success && response.data) {
+                Dashboard.updateQuestStorage(response.data);
+            }
+        } catch (error) {
+            // Silently fail
+            console.warn('Quest storage poll failed');
         }
     }
     

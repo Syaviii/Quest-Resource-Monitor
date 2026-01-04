@@ -1,4 +1,3 @@
-```javascript
 /**
  * VR System Monitor - API Client
  * talks to the python backend.

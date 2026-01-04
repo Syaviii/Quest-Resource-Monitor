@@ -33,7 +33,6 @@ if you don't have the wireless package sideloaded, just use usb, preferably the 
 - thermal breakdown (no clear way to monitor the thermal zones yet)
 - wireless adb drops and can have issues reconnecting after being left idle (Issue due to how the quest sleeps, no fix but can try to make reconnection stable)
 - network stats are fucked up!!!
-- quest storage stats are not implemented yet as for some reason theres no clear way to mount or monitor it?
 
 ## tech stack
 
@@ -51,7 +50,7 @@ if you don't have the wireless package sideloaded, just use usb, preferably the 
 
 ## performance
 
-- polling every 10 seconds by default (configurable)
+- polling every 10 seconds by default (configurable to 5, 10, 30 seconds)
 - metrics are cached, api calls are instant
 - database cleanup runs automatically (old data deleted after 48 hours)
 - 50mb disk space for 48 hours of data

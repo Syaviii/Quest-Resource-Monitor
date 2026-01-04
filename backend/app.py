@@ -24,6 +24,8 @@ from storage.database import db
 
 # ========== Logging Setup ==========
 
+(config.BASE_DIR / 'logs').mkdir(exist_ok=True)
+
 logging.basicConfig(
     level=getattr(logging, config.LOG_LEVEL),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -45,7 +47,7 @@ def create_app():
     CORS(app, resources={r"/*": {"origins": "*"}})
     
     # Register blueprints
-    app.register_blueprint(api)
+    app.register_blueprint(api, url_prefix='/api')
     
     # Register error handlers
     register_error_handlers(app)
@@ -136,6 +138,13 @@ def on_startup():
     if deleted > 0:
         logger.info(f"cleaned up {deleted} old records")
     
+    # clear any previousrecording sessions
+    stale_session = db.get_active_session()
+    if stale_session:
+        logger.warning(f"stale recording session!")
+        db.stop_session(stale_session.id)
+        logger.info(f"stopped stale session - {stale_session.id}")
+    
     # Detect devices
     devices = device_manager.detect_devices()
     for device in devices.values():
@@ -147,11 +156,11 @@ def on_startup():
     # Start metric polling
     poller.start()
     
-    logger.info(f"Server ready at http://{config.FLASK_HOST}:{config.FLASK_PORT}")
+    logger.info(f"ready at http://{config.FLASK_HOST}:{config.FLASK_PORT}")
 
 
 def on_shutdown():
-    logger.info("shutting down...")
+    logger.info("stopping vr monitor")
     
     # Stop polling
     poller.stop()
@@ -162,7 +171,7 @@ def on_shutdown():
     # Close database
     db.close()
     
-    logger.info("Shutdown complete")
+    logger.info("Stopped")
 
 
 # Register shutdown handler
